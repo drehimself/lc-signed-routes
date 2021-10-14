@@ -5,6 +5,7 @@ use App\Models\Appointment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\URL;
 
 /*
 |--------------------------------------------------------------------------
@@ -34,6 +35,13 @@ Route::post('/confirm/{appointment}', function (Request $request, Appointment $a
     return redirect('dashboard')->with('success_message', 'Appointment was confirmed!');
 })->middleware(['auth'])->name('confirm');
 
+Route::get('/confirm/{appointment}', function (Request $request, Appointment $appointment) {
+    $appointment->confirmed_at = now();
+    $appointment->save();
+
+    return view('confirmed-appointment');
+})->middleware(['signed'])->name('confirm.get');
+
 
 Route::get('/admin', function () {
     return view('admin', [
@@ -42,7 +50,12 @@ Route::get('/admin', function () {
 })->middleware(['auth'])->name('admin');
 
 Route::post('/email/{appointment}', function (Request $request, Appointment $appointment) {
-    Mail::to($appointment->user)->send(new ConfirmAppointmentMailable($appointment));
+    // $link = route('confirm.get', $appointment);
+    // $link = URL::signedRoute('confirm.get', $appointment);
+    $link = URL::temporarySignedRoute('confirm.get', now()->addSeconds(30), $appointment);
+
+
+    Mail::to($appointment->user)->send(new ConfirmAppointmentMailable($appointment, $link));
 
     return redirect('admin')->with('success_message', 'Email was sent!');
 })->middleware(['auth'])->name('email');

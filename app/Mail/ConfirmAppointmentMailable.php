@@ -13,15 +13,17 @@ class ConfirmAppointmentMailable extends Mailable
     use Queueable, SerializesModels;
 
     public $appointment;
+    public $link;
 
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct(Appointment $appointment)
+    public function __construct(Appointment $appointment, $link)
     {
         $this->appointment = $appointment;
+        $this->link = $link;
     }
 
     /**
